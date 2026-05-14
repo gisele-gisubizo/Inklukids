@@ -1,3 +1,6 @@
+/**
+ * Loads and validates process.env via Zod. Thrown errors exit startup so the API never runs half-configured.
+ */
 const { z } = require('zod');
 
 const EnvSchema = z.object({

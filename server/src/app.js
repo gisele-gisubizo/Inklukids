@@ -1,3 +1,7 @@
+/**
+ * Express application factory: JSON body, CORS, cookies, and `/api/*` routers.
+ * Caller supplies validated `env` (from `config/env`) and allowed `clientOrigin` (comma-separated allowed Origins).
+ */
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');

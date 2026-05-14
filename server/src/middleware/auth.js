@@ -1,9 +1,19 @@
 const jwt = require('jsonwebtoken');
 
+const BEARER_PREFIX = 'Bearer ';
+
+/** Returns the JWT from `Authorization: Bearer <token>` or `null` if missing or malformed. */
+function readBearerToken(authorizationHeader) {
+  const value = authorizationHeader || '';
+  if (!value.startsWith(BEARER_PREFIX)) return null;
+  const token = value.slice(BEARER_PREFIX.length).trim();
+  return token || null;
+}
+
+/** Express middleware: verifies access JWT and sets `req.auth` with `{ userId, role }`. */
 function requireAuth({ accessSecret }) {
   return (req, res, next) => {
-    const header = req.headers.authorization || '';
-    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+    const token = readBearerToken(req.headers.authorization);
     if (!token) return res.status(401).json({ message: 'Missing access token' });
     try {
       const payload = jwt.verify(token, accessSecret);
@@ -15,5 +25,5 @@ function requireAuth({ accessSecret }) {
   };
 }
 
-module.exports = { requireAuth };
+module.exports = { requireAuth, readBearerToken };
 

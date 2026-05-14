@@ -8,8 +8,8 @@
    ============================================================ */
 
 (function (global) {
-  const STORAGE_KEY = 'inklukids_proto_v1';
-  const SESSION_KEY = 'inklukids_proto_session_v1';
+  const STORAGE_KEY = 'inklukids_proto_v2';
+  const SESSION_KEY = 'inklukids_proto_session_v2';
   const LATENCY_MS  = 350;
 
   // ── Seed data ────────────────────────────────────────────────
@@ -17,10 +17,10 @@
     users: [
       { id: 'u1', name: 'Denyse Ishimirwe', email: 'denyse@gmail.com', password: 'test@123', role: 'teacher', grades: ['P3','P4'] },
       { id: 'u2', name: 'Stacy Mukamana',   email: 'stacy@gmail.com',  password: 'test@123', role: 'teacher', grades: ['P5'] },
-      { id: 'u3', name: 'Marie Uwase',      email: 'marie@gmail.com',  password: 'try@123',  role: 'parent',  children: ['u5','u6'] },
-      { id: 'u4', name: 'Jean Mugabo',      email: 'j.mugabo@admin.com', password: 'try@123', role: 'admin' },
-      { id: 'u5', name: 'Olga Ineza',       email: 'olga@gmail.com',   password: 'try@123',  role: 'child',   grade: 'P3', parentId: 'u3', points: 240 },
-      { id: 'u6', name: 'Tiffany Keza',     email: 'tiffany@gmail.com',password: 'try@123',  role: 'child',   grade: 'P4', parentId: 'u3', points: 180 },
+      { id: 'u3', name: 'Marie Uwase',      email: 'marie@gmail.com',  password: 'test@123', role: 'parent',  children: ['u5','u6'] },
+      { id: 'u4', name: 'Jean Mugabo',      email: 'j.mugabo@admin.com', password: 'test@123', role: 'admin' },
+      { id: 'u5', name: 'Olga Ineza',       email: 'olga@gmail.com',   password: 'test@123', role: 'child',   grade: 'P3', parentId: 'u3', points: 240 },
+      { id: 'u6', name: 'Tiffany Keza',     email: 'tiffany@gmail.com',password: 'test@123', role: 'child',   grade: 'P4', parentId: 'u3', points: 180 },
     ],
     activities: [
       { id: 'a1', title: 'Daily Greeting Routine',    category: 'Social Skills',     points: 10, grade: 'P3', createdBy: 'u1' },

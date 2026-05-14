@@ -1,7 +1,12 @@
+/** Base URL for the Express API (see server README / deployment env). */
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
 
+/**
+ * JSON fetch helper: sends credentials (refresh cookie), optional Bearer access token,
+ * and throws an Error with `.status` / `.data` when the response is not OK.
+ */
 export async function apiFetch(path, { method = 'GET', body, accessToken, headers } = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${API_BASE}${path}`, {
     method,
     credentials: 'include',
     headers: {
@@ -12,16 +17,17 @@ export async function apiFetch(path, { method = 'GET', body, accessToken, header
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const isJson = res.headers.get('content-type')?.includes('application/json');
-  const data = isJson ? await res.json() : null;
+  const contentType = response.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+  const responseBody = isJson ? await response.json() : null;
 
-  if (!res.ok) {
-    const message = data?.message || `Request failed (${res.status})`;
+  if (!response.ok) {
+    const message = responseBody?.message || `Request failed (${response.status})`;
     const err = new Error(message);
-    err.status = res.status;
-    err.data = data;
+    err.status = response.status;
+    err.data = responseBody;
     throw err;
   }
-  return data;
+  return responseBody;
 }
 

@@ -214,11 +214,11 @@ function Login({ nav, onAuth }) {
           </p>
 
           <div className="demo-creds">
-            <b>Demo logins</b><br />
-            Teacher · denyse@gmail.com / test@123<br />
-            Parent &nbsp;· marie@gmail.com / try@123<br />
-            Child &nbsp;&nbsp;· olga@gmail.com / try@123<br />
-            Admin &nbsp;&nbsp;· j.mugabo@admin.com / try@123
+            <b>Demo logins</b> (password for all: <b>test@123</b>)<br />
+            Teacher · denyse@gmail.com<br />
+            Parent &nbsp;· marie@gmail.com<br />
+            Child &nbsp;&nbsp;· olga@gmail.com<br />
+            Admin &nbsp;&nbsp;· j.mugabo@admin.com
           </div>
         </form>
       </div>

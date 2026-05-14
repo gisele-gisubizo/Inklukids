@@ -31,6 +31,7 @@ const LoginSchema = z.object({
   password: z.string().min(1),
 });
 
+/** SameSite / secure / path for the httpOnly refresh cookie (path scoped to auth routes). */
 function refreshCookieShape(env) {
   const isProd = process.env.NODE_ENV === 'production';
   const crossSite = Boolean(env.REFRESH_COOKIE_CROSS_SITE);

@@ -28,15 +28,15 @@ Just open `index.html` in a modern browser. That's it.
 | Role    | Email                    | Password   |
 |---------|--------------------------|------------|
 | Teacher | denyse@gmail.com         | test@123   |
-| Parent  | marie@gmail.com          | try@123    |
-| Child   | olga@gmail.com           | try@123    |
-| Admin   | j.mugabo@admin.com       | try@123    |
+| Parent  | marie@gmail.com          | test@123   |
+| Child   | olga@gmail.com           | test@123   |
+| Admin   | j.mugabo@admin.com       | test@123   |
 
 You can also register a new account (Parent / Teacher / Child).
 
 ## Reset state
 
-The prototype persists to `localStorage` under the key `inklukids_proto_v1`. To wipe all data, open the browser console on the prototype page and run:
+The prototype persists to `localStorage` under the key `inklukids_proto_v2`. To wipe all data, open the browser console on the prototype page and run:
 
 ```js
 window.MockDB.reset(); location.reload();
@@ -46,7 +46,7 @@ window.MockDB.reset(); location.reload();
 
 ```
 prototype/
-├── index.html     # entry — loads React, Babel, mockDb.js, app.js
+├── index.html     # entry — loads React/Babel from CDN; inlined mock DB + app (works from file://)
 ├── styles.css     # design tokens mirror the live app (indigo + amber + Inter/Space Grotesk)
 ├── mockDb.js      # simulated database: users, activities, assignments, messages, announcements
 ├── app.js         # all React screens and hash routing

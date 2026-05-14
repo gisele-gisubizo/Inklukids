@@ -17,6 +17,12 @@ import lpDashboardStrip from './assets/lp-diverse/dashboard.jpg';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { apiFetch } from './api/client';
 
+/**
+ * Root SPA: client-only routing via `page` state, role dashboards, and `apiFetch` to the API.
+ * Major UI areas are separated with section comments (Landing, Auth, Teacher, Parent, …).
+ */
+const ROLES_WITH_INBOX_NOTIFICATIONS = ['teacher', 'parent', 'admin'];
+
 const Icon = ({ name, size = 20, color = 'currentColor' }) => {
   const icons = {
     home: <path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" />,
@@ -72,7 +78,8 @@ const LP_PHOTOS = {
   dashboardCard: lpDashboardStrip,
 };
 
-const LI = ({ d, size = 22 }) => (
+/** Landing-page stroke icon: `d` is SVG path content (same pattern as marketing feature cards). */
+const OutlineIcon = ({ d, size = 22 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     {d}
@@ -93,27 +100,32 @@ function App() {
   const [notifNav, setNotifNav] = useState(null);
 
   const allNotifs = [...messageNotifs, ...announcementNotifs, ...notifications];
-  const unreadCount = notifications.filter(n => !n.read).length + messageUnreadTotal + announcementNotifs.filter(n => !n.read).length;
+  const unreadCount =
+    notifications.filter((n) => !n.read).length
+    + messageUnreadTotal
+    + announcementNotifs.filter((n) => !n.read).length;
+
   const markRead = (id) => {
-    setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
-    setMessageNotifs((p) => {
-      const next = p.map(n => n.id === id ? { ...n, read: true } : n);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setMessageNotifs((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
       setMessageUnreadTotal(next.reduce((sum, n) => sum + (n.read ? 0 : (n.unreadCount || 0)), 0));
       return next;
     });
-    setAnnouncementNotifs((p) => p.map(n => n.id === id ? { ...n, read: true } : n));
+    setAnnouncementNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
+
   const markAllRead = () => {
-    setNotifications(p => p.map(n => ({ ...n, read: true })));
-    setMessageNotifs((p) => {
-      const next = p.map(n => ({ ...n, read: true }));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setMessageNotifs((prev) => {
+      const next = prev.map((n) => ({ ...n, read: true }));
       setMessageUnreadTotal(0);
       return next;
     });
-    setAnnouncementNotifs(p => p.map(n => ({ ...n, read: true })));
+    setAnnouncementNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  // Try refreshing access token on boot (uses refresh cookie if present)
+  // Restore session when a valid httpOnly refresh cookie is already present.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -130,16 +142,16 @@ function App() {
           }
         }
       } catch {
-        // not logged in; ignore
+        /* not logged in */
       }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  const handleAuth = (u, isNew) => {
-    if (isNew) setUsers(p => [...p, u]);
-    setUser(u);
-    setPage(u.role + '-dashboard');
+  const handleAuth = (authenticatedUser, isNewRegistration) => {
+    if (isNewRegistration) setUsers((prev) => [...prev, authenticatedUser]);
+    setUser(authenticatedUser);
+    setPage(authenticatedUser.role + '-dashboard');
   };
   const handleLogout = async () => {
     try { await apiFetch('/api/auth/logout', { method: 'POST' }); } catch {}
@@ -148,18 +160,19 @@ function App() {
     setPage('login');
   };
   useEffect(() => {
-    if (!accessToken || !user?.role || !['teacher', 'parent', 'admin'].includes(user.role)) {
+    if (!accessToken || !user?.role || !ROLES_WITH_INBOX_NOTIFICATIONS.includes(user.role)) {
       setMessageNotifs([]);
       return;
     }
     let cancelled = false;
-    const load = async () => {
+
+    async function syncUnreadMessageThreads() {
       try {
         const data = await apiFetch('/api/messages/threads', { accessToken });
         if (cancelled) return;
-        const unreadThreads = (data?.threads || []).filter(t => (t.unreadCount || 0) > 0);
+        const unreadThreads = (data?.threads || []).filter((t) => (t.unreadCount || 0) > 0);
         setMessageNotifs((prev) => {
-          const prevReadMap = new Map(prev.map(n => [n.id, !!n.read]));
+          const prevReadMap = new Map(prev.map((n) => [n.id, !!n.read]));
           const next = unreadThreads.map((t) => ({
             id: `msg-${t.userId}`,
             text: `New message from ${((t.role || 'user').charAt(0).toUpperCase() + (t.role || 'user').slice(1))} ${t.name}`,
@@ -176,9 +189,10 @@ function App() {
           setMessageUnreadTotal(0);
         }
       }
-    };
-    load();
-    const interval = window.setInterval(load, 4000);
+    }
+
+    syncUnreadMessageThreads();
+    const interval = window.setInterval(syncUnreadMessageThreads, 4000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -186,18 +200,19 @@ function App() {
   }, [accessToken, user?.role]);
 
   useEffect(() => {
-    if (!accessToken || !user?.role || !['teacher', 'parent', 'admin'].includes(user.role)) {
+    if (!accessToken || !user?.role || !ROLES_WITH_INBOX_NOTIFICATIONS.includes(user.role)) {
       setAnnouncementNotifs([]);
       return;
     }
     let cancelled = false;
-    const load = async () => {
+
+    async function syncRecentAnnouncements() {
       try {
         const data = await apiFetch('/api/announcements', { accessToken });
         if (cancelled) return;
         const items = (data?.announcements || []).slice(0, 8);
         setAnnouncementNotifs((prev) => {
-          const prevReadMap = new Map(prev.map(n => [n.id, !!n.read]));
+          const prevReadMap = new Map(prev.map((n) => [n.id, !!n.read]));
           return items.map((a) => ({
             id: `ann-${a.id}`,
             text: `Announcement: ${a.title}`,
@@ -209,9 +224,10 @@ function App() {
       } catch {
         if (!cancelled) setAnnouncementNotifs([]);
       }
-    };
-    load();
-    const interval = window.setInterval(load, 6000);
+    }
+
+    syncRecentAnnouncements();
+    const interval = window.setInterval(syncRecentAnnouncements, 6000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -364,7 +380,7 @@ function LandingPage({ go }) {
                 role="img"
                 aria-label={f.photoAlt}
               />
-              <div className="lp-feat-icon"><LI d={f.d} /></div>
+              <div className="lp-feat-icon"><OutlineIcon d={f.d} /></div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
             </div>
@@ -431,7 +447,7 @@ function LandingPage({ go }) {
                 role="img"
                 aria-label={r.photoAlt}
               />
-              <div className="lp-role-icon"><LI d={r.d} size={20} /></div>
+              <div className="lp-role-icon"><OutlineIcon d={r.d} size={20} /></div>
               <h3>{r.label}</h3>
               <p>{r.desc}</p>
               <button type="button" className="lp-role-btn">Get started</button>
