@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InkluKids — Prototype</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <noscript>
+    <p style="font-family: system-ui, sans-serif; padding: 2rem;">This prototype needs JavaScript turned on.</p>
+  </noscript>
+  <div id="root">
+    <p style="font-family: system-ui, sans-serif; padding: 2rem; color: #444; line-height: 1.5; max-width: 36rem;">
+      Loading InkluKids prototype…<br /><br />
+      If this never disappears: open the <strong>index.html</strong> file itself (not only the folder), stay online so React can load from unpkg.com, then press F12 → Console for errors.
+    </p>
+  </div>
+
+  <!-- ===== Mock DB (plain JS, inlined so file:// works) ===== -->
+  <script>
+  (function (global) {
+    const STORAGE_KEY = 'inklukids_proto_v1';
+    const SESSION_KEY = 'inklukids_proto_session_v1';
+    const LATENCY_MS  = 350;
+
+    const seed = {
+      users: [
+        { id: 'u1', name: 'Denyse Ishimirwe', email: 'denyse@gmail.com', password: 'test@123', role: 'teacher', grades: ['P3','P4'] },
+        { id: 'u2', name: 'Stacy Mukamana',   email: 'stacy@gmail.com',  password: 'test@123', role: 'teacher', grades: ['P5'] },
+        { id: 'u3', name: 'Marie Uwase',      email: 'marie@gmail.com',  password: 'try@123',  role: 'parent',  children: ['u5','u6'] },
+        { id: 'u4', name: 'Jean Mugabo',      email: 'j.mugabo@admin.com', password: 'try@123', role: 'admin' },
+        { id: 'u5', name: 'Olga Ineza',       email: 'olga@gmail.com',   password: 'try@123',  role: 'child',   grade: 'P3', parentId: 'u3', points: 240 },
+        { id: 'u6', name: 'Tiffany Keza',     email: 'tiffany@gmail.com',password: 'try@123',  role: 'child',   grade: 'P4', parentId: 'u3', points: 180 },
+      ],
+      activities: [
+        { id: 'a1', title: 'Daily Greeting Routine',    category: 'Social Skills',     points: 10, grade: 'P3', createdBy: 'u1' },
+        { id: 'a2', title: 'Colour Matching Game',      category: 'Cognitive',         points: 15, grade: 'P3', createdBy: 'u1' },
+        { id: 'a3', title: 'Storytime: The Lost Bird',  category: 'Language',          points: 20, grade: 'P4', createdBy: 'u1' },
+        { id: 'a4', title: 'Calm-down Breathing',       category: 'Emotional',         points: 10, grade: 'P3', createdBy: 'u2' },
+        { id: 'a5', title: 'Counting With Beads',       category: 'Math',              points: 15, grade: 'P4', createdBy: 'u2' },
+        { id: 'a6', title: 'Picture Communication',     category: 'Communication',     points: 20, grade: 'P5', createdBy: 'u2' },
+      ],
+      assignments: [
+        { id: 'as1', activityId: 'a1', assignedTo: 'u5', assignedBy: 'u1', status: 'completed', dueDate: '2026-05-10', completedAt: '2026-05-09' },
+        { id: 'as2', activityId: 'a2', assignedTo: 'u5', assignedBy: 'u1', status: 'in-progress', dueDate: '2026-05-16' },
+        { id: 'as3', activityId: 'a3', assignedTo: 'u6', assignedBy: 'u1', status: 'pending',     dueDate: '2026-05-18' },
+        { id: 'as4', activityId: 'a4', assignedTo: 'u5', assignedBy: 'u2', status: 'pending',     dueDate: '2026-05-20' },
+      ],
+      messages: [
+        { id: 'm1', from: 'u1', to: 'u3', text: 'Hello! Olga did great on her greeting routine today.',  at: '2026-05-13T09:14:00' },
+        { id: 'm2', from: 'u3', to: 'u1', text: 'Thank you so much! She practiced over the weekend.',    at: '2026-05-13T09:22:00' },
+        { id: 'm3', from: 'u1', to: 'u3', text: 'Tomorrow we will start the colour matching activity.',  at: '2026-05-13T09:24:00' },
+        { id: 'm4', from: 'u2', to: 'u3', text: 'Please review the calm-down breathing video at home.',  at: '2026-05-12T16:10:00' },
+      ],
+      announcements: [
+        { id: 'an1', title: 'Inclusive Education Workshop',    body: 'Join us Saturday for a hands-on workshop on inclusive classrooms.', date: '2026-05-18', authorId: 'u4' },
+        { id: 'an2', title: 'New Activities Added',            body: 'Six new activities published for grades P3-P5.',                    date: '2026-05-12', authorId: 'u4' },
+      ],
+    };
+
+    function load() {
+      try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+      save(seed); return JSON.parse(JSON.stringify(seed));
+    }
+    function save(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {} }
+    function delay(v) { return new Promise((r) => setTimeout(() => r(v), LATENCY_MS)); }
+    function uid(p) { return p + Math.random().toString(36).slice(2, 9); }
+    function getSession() { try { const r = localStorage.getItem(SESSION_KEY); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
+    function setSession(u) { if (u) localStorage.setItem(SESSION_KEY, JSON.stringify(u)); else localStorage.removeItem(SESSION_KEY); }
+
+    global.MockDB = {
+      login(email, password) {
+        const s = load();
+        const u = s.users.find((x) => x.email.toLowerCase() === String(email||'').toLowerCase().trim() && x.password === password);
+        if (!u) return delay(Promise.reject(new Error('Invalid email or password.')));
+        const safe = { ...u }; delete safe.password; setSession(safe); return delay(safe);
+      },
+      register({ name, email, password, role, grade }) {
+        const s = load();
+        if (!name || !email || !password || !role) return delay(Promise.reject(new Error('All fields are required.')));
+        if (password.length < 6) return delay(Promise.reject(new Error('Password must be at least 6 characters.')));
+        if (s.users.some((u) => u.email.toLowerCase() === email.toLowerCase().trim())) return delay(Promise.reject(new Error('Email already registered.')));
+        const u = { id: uid('u'), name: name.trim(), email: email.toLowerCase().trim(), password, role,
+          ...(role==='child'?{grade:grade||'',points:0}:{}), ...(role==='parent'?{children:[]}:{}), ...(role==='teacher'?{grades:[]}:{}) };
+        s.users.push(u); save(s); const safe = { ...u }; delete safe.password; setSession(safe); return delay(safe);
+      },
+      logout() { setSession(null); return delay(true); },
+      currentUser() { return getSession(); },
+      listUsers()         { return delay(load().users.map((u)=>{const c={...u};delete c.password;return c;})); },
+      listActivities()    { return delay(load().activities); },
+      listAssignments()   { return delay(load().assignments); },
+      listMessages()      { return delay(load().messages); },
+      listAnnouncements() { return delay(load().announcements); },
+      createActivity({ title, category, points, grade, createdBy }) {
+        if (!title || !category) return delay(Promise.reject(new Error('Title and category required.')));
+        const s = load(); const a = { id: uid('a'), title: title.trim(), category, points: Number(points)||10, grade: grade||'P3', createdBy };
+        s.activities.push(a); save(s); return delay(a);
+      },
+      createAssignment({ activityId, assignedTo, assignedBy, dueDate }) {
+        if (!activityId || !assignedTo) return delay(Promise.reject(new Error('Activity and learner required.')));
+        const s = load(); const a = { id: uid('as'), activityId, assignedTo, assignedBy, status: 'pending', dueDate: dueDate||null };
+        s.assignments.push(a); save(s); return delay(a);
+      },
+      completeAssignment(id) {
+        const s = load(); const as = s.assignments.find((x)=>x.id===id);
+        if (!as) return delay(Promise.reject(new Error('Assignment not found.')));
+        as.status = 'completed'; as.completedAt = new Date().toISOString().slice(0,10);
+        const child = s.users.find((u)=>u.id===as.assignedTo); const act = s.activities.find((x)=>x.id===as.activityId);
+        if (child && act) child.points = (child.points||0) + (act.points||0);
+        save(s); return delay(as);
+      },
+      sendMessage({ from, to, text }) {
+        if (!text || !text.trim()) return delay(Promise.reject(new Error('Message cannot be empty.')));
+        const s = load(); const m = { id: uid('m'), from, to, text: text.trim(), at: new Date().toISOString() };
+        s.messages.push(m); save(s); return delay(m);
+      },
+      createAnnouncement({ title, body, authorId }) {
+        if (!title || !body) return delay(Promise.reject(new Error('Title and body required.')));
+        const s = load(); const a = { id: uid('an'), title: title.trim(), body: body.trim(), date: new Date().toISOString().slice(0,10), authorId };
+        s.announcements.unshift(a); save(s); return delay(a);
+      },
+      deleteUser(id) { const s = load(); s.users = s.users.filter((u)=>u.id!==id); save(s); return delay(true); },
+      reset() { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(SESSION_KEY); return delay(true); },
+    };
+  })(window);
+  </script>
+
+  <!-- ===== React app (JSX, inlined so Babel doesn't need to fetch) ===== -->
+  <script type="text/babel" data-presets="env,react">
+  const { useState, useEffect, useMemo, useCallback } = React;
+  const DB = window.MockDB;
+
+  const I = ({ name, size = 18 }) => {
+    const paths = {
+      home:   <path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" />,
+      book:   <><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></>,
+      chart:  <><path d="M18 20V10M12 20V4M6 20v-6" /></>,
+      msg:    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />,
+      bell:   <><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" /></>,
+      users:  <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></>,
+      out:    <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></>,
+      plus:   <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
+      search: <><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+      star:   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+      list:   <><line x1="8" y1="6"  x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6"  x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></>,
+      user:   <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+      x:      <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+      send:   <><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></>,
+      cal:    <><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+    };
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {paths[name]}
+      </svg>
+    );
+  };
+
+  function useHashRoute() {
+    const [route, setRoute] = useState(() => window.location.hash.replace(/^#/, '') || '/');
+    useEffect(() => {
+      const h = () => setRoute(window.location.hash.replace(/^#/, '') || '/');
+      window.addEventListener('hashchange', h);
+      return () => window.removeEventListener('hashchange', h);
+    }, []);
+    const nav = useCallback((p) => { window.location.hash = p; }, []);
+    return [route, nav];
+  }
+
+  const ToastCtx = React.createContext(null);
+  function ToastProvider({ children }) {
+    const [toasts, setToasts] = useState([]);
+    const push = useCallback((text, kind = 'info') => {
+      const id = Math.random().toString(36).slice(2);
+      setToasts((t) => [...t, { id, text, kind }]);
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
+    }, []);
+    return (
+      <ToastCtx.Provider value={push}>
+        {children}
+        <div className="toast-wrap">
+          {toasts.map((t) => <div key={t.id} className={`toast ${t.kind}`}>{t.text}</div>)}
+        </div>
+      </ToastCtx.Provider>
+    );
+  }
+  const useToast = () => React.useContext(ToastCtx);
+
+  function Landing({ nav }) {
+    return (
+      <div>
+        <nav className="nav">
+          <div className="nav-logo">Inklu<em>Kids</em></div>
+          <div className="nav-right">
+            <a className="nav-link" onClick={() => nav('/')}>Home</a>
+            <a className="nav-link" onClick={() => nav('/login')}>About</a>
+            <button className="nav-signin" onClick={() => nav('/login')}>Sign in</button>
+            <button className="nav-start"  onClick={() => nav('/register')}>Get started</button>
+          </div>
+        </nav>
+        <section className="lp-hero">
+          <div className="lp-hero-text">
+            <span className="lp-tag">★ INCLUSIVE EDUCATION • RWANDA</span>
+            <h1>Supporting every <em>learner</em> on the spectrum.</h1>
+            <p>InkluKids connects teachers, parents and children in one place — share progress, assign activities, and coordinate support across home and school.</p>
+            <div className="lp-hero-btns">
+              <button className="lp-btn-primary"   onClick={() => nav('/register')}>Get started free</button>
+              <button className="lp-btn-secondary" onClick={() => nav('/login')}>Sign in</button>
+            </div>
+          </div>
+          <div className="lp-card-preview">
+            <h4>Teacher dashboard preview</h4>
+            <div className="lp-stat-row">
+              <div className="lp-stat"><div className="n">12</div><div className="l">Learners</div></div>
+              <div className="lp-stat"><div className="n">24</div><div className="l">Activities</div></div>
+              <div className="lp-stat"><div className="n">86%</div><div className="l">Engagement</div></div>
+            </div>
+            <div className="lp-mini-bars">
+              {[40,65,50,80,70,90,60].map((h,i)=><div key={i} className="lp-mini-bar" style={{height:`${h}%`}}/>)}
+            </div>
+          </div>
+        </section>
+        <section className="lp-features">
+          <h2>Everything in <em>one place</em></h2>
+          <p>Designed around the day-to-day needs of inclusive classrooms.</p>
+          <div className="lp-feat-grid">
+            {[
+              { icon: 'book',  title: 'Activities',     text: 'Curated learning activities tailored to each learner’s grade and needs.' },
+              { icon: 'chart', title: 'Progress',       text: 'Track completion, points and trends — share updates with parents.' },
+              { icon: 'msg',   title: 'Messaging',      text: 'Direct, contextual communication between teachers and parents.' },
+              { icon: 'bell',  title: 'Announcements',  text: 'School-wide notices for events, training and reminders.' },
+              { icon: 'users', title: 'User Management',text: 'Admin tools for onboarding teachers, parents and children.' },
+              { icon: 'star',  title: 'Rewards',        text: 'Children earn points as they complete assigned activities.' },
+            ].map((f) => (
+              <div key={f.title} className="lp-feat">
+                <div className="lp-feat-icon"><I name={f.icon} size={22} /></div>
+                <h3>{f.title}</h3>
+                <p>{f.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <footer className="lp-footer">© 2026 InkluKids — Prototype. Supporting autism inclusion in Rwandan schools.</footer>
+      </div>
+    );
+  }
+
+  function Login({ nav, onAuth }) {
+    const toast = useToast();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState('');
+    async function submit(e) {
+      e.preventDefault(); setErr('');
+      if (!email || !password) { setErr('Please enter your email and password.'); return; }
+      setBusy(true);
+      try { const u = await DB.login(email, password); onAuth(u); toast(`Welcome back, ${u.name.split(' ')[0]}!`, 'success'); nav('/dashboard'); }
+      catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+    }
+    return (
+      <div className="auth-wrap">
+        <div className="auth-side">
+          <div className="logo">Inklu<em style={{fontStyle:'normal'}}>Kids</em></div>
+          <div className="blurb"><h2>Welcome back.</h2><p>Sign in to manage learners, assignments and messages — all in one place.</p></div>
+          <div className="footer-note">Prototype build • All data is simulated.</div>
+        </div>
+        <div className="auth-form-side">
+          <form className="auth-form" onSubmit={submit}>
+            <h2>Sign in</h2>
+            <p className="muted">Use one of the demo accounts below to explore.</p>
+            {err && <div className="form-error">{err}</div>}
+            <div className="form-group"><label>Email</label><input type="email" placeholder="you@example.com" value={email} onChange={(e)=>setEmail(e.target.value)} autoFocus /></div>
+            <div className="form-group"><label>Password</label><input type="password" placeholder="••••••••" value={password} onChange={(e)=>setPassword(e.target.value)} /></div>
+            <button type="submit" className="btn-primary" style={{width:'100%',justifyContent:'center'}} disabled={busy}>{busy?'Signing in…':'Sign in'}</button>
+            <p className="form-meta">No account? <a onClick={()=>nav('/register')}>Create one</a> · <a onClick={()=>nav('/')}>Back to home</a></p>
+            <div className="demo-creds">
+              <b>Demo logins</b><br/>
+              Teacher · denyse@gmail.com / test@123<br/>
+              Parent &nbsp;· marie@gmail.com / try@123<br/>
+              Child &nbsp;&nbsp;· olga@gmail.com / try@123<br/>
+              Admin &nbsp;&nbsp;· j.mugabo@admin.com / try@123
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  function Register({ nav, onAuth }) {
+    const toast = useToast();
+    const [form, setForm] = useState({ name:'', email:'', password:'', role:'parent', grade:'' });
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState('');
+    const set = (k,v) => setForm((f)=>({ ...f, [k]: v }));
+    async function submit(e) {
+      e.preventDefault(); setErr(''); setBusy(true);
+      try { const u = await DB.register(form); onAuth(u); toast('Account created — welcome to InkluKids!','success'); nav('/dashboard'); }
+      catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+    }
+    return (
+      <div className="auth-wrap">
+        <div className="auth-side">
+          <div className="logo">Inklu<em style={{fontStyle:'normal'}}>Kids</em></div>
+          <div className="blurb"><h2>Join InkluKids.</h2><p>Create an account to collaborate on every learner's journey.</p></div>
+          <div className="footer-note">Prototype build • Stored locally on this device.</div>
+        </div>
+        <div className="auth-form-side">
+          <form className="auth-form" onSubmit={submit}>
+            <h2>Create account</h2>
+            <p className="muted">Fill in your details — accounts are saved to local storage.</p>
+            {err && <div className="form-error">{err}</div>}
+            <div className="form-group"><label>Full name</label><input type="text" placeholder="Jane Doe" value={form.name} onChange={(e)=>set('name',e.target.value)} /></div>
+            <div className="form-group"><label>Email</label><input type="email" placeholder="you@example.com" value={form.email} onChange={(e)=>set('email',e.target.value)} /></div>
+            <div className="form-group"><label>Password</label><input type="password" placeholder="At least 6 characters" value={form.password} onChange={(e)=>set('password',e.target.value)} /></div>
+            <div className="form-group"><label>Role</label>
+              <select value={form.role} onChange={(e)=>set('role',e.target.value)}>
+                <option value="parent">Parent</option><option value="teacher">Teacher</option><option value="child">Child</option>
+              </select>
+            </div>
+            {form.role==='child' && (
+              <div className="form-group"><label>Grade</label>
+                <select value={form.grade} onChange={(e)=>set('grade',e.target.value)}>
+                  <option value="">Select…</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>P5</option><option>P6</option>
+                </select>
+              </div>
+            )}
+            <button type="submit" className="btn-primary" style={{width:'100%',justifyContent:'center'}} disabled={busy}>{busy?'Creating account…':'Create account'}</button>
+            <p className="form-meta">Already registered? <a onClick={()=>nav('/login')}>Sign in</a></p>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  function Shell({ user, route, nav, onLogout, children }) {
+    const [query, setQuery] = useState('');
+    const menu = useMemo(() => {
+      const common = [{ key: '/dashboard', label: 'Dashboard', icon: 'home' }];
+      const byRole = {
+        teacher: [
+          { key: '/activities',    label: 'Activities',    icon: 'book' },
+          { key: '/assignments',   label: 'Assignments',   icon: 'list' },
+          { key: '/messages',      label: 'Messages',      icon: 'msg' },
+          { key: '/announcements', label: 'Announcements', icon: 'bell' },
+        ],
+        parent: [
+          { key: '/activities',    label: 'Activities',    icon: 'book' },
+          { key: '/assignments',   label: 'My Children',   icon: 'users' },
+          { key: '/messages',      label: 'Messages',      icon: 'msg' },
+          { key: '/announcements', label: 'Announcements', icon: 'bell' },
+        ],
+        child: [
+          { key: '/activities',    label: 'My Activities', icon: 'book' },
+          { key: '/assignments',   label: 'My Progress',   icon: 'chart' },
+          { key: '/announcements', label: 'Announcements', icon: 'bell' },
+        ],
+        admin: [
+          { key: '/users',         label: 'Users',         icon: 'users' },
+          { key: '/activities',    label: 'Activities',    icon: 'book' },
+          { key: '/announcements', label: 'Announcements', icon: 'bell' },
+        ],
+      };
+      return [...common, ...(byRole[user.role] || [])];
+    }, [user.role]);
+
+    const initials = user.name.split(/\s+/).map((p)=>p[0]).slice(0,2).join('').toUpperCase();
+
+    return (
+      <div className="app-shell">
+        <aside className="sidebar">
+          <div className="logo">Inklu<em>Kids</em></div>
+          <span className="role-pill">{user.role}</span>
+          {menu.map((m) => (
+            <div key={m.key} className={`nav-item ${route===m.key?'active':''}`} onClick={()=>nav(m.key)}>
+              <I name={m.icon} /> {m.label}
+            </div>
+          ))}
+          <div className="sidebar-footer">
+            <div className={`nav-item ${route==='/profile'?'active':''}`} onClick={()=>nav('/profile')}><I name="user" /> Profile</div>
+            <div className="nav-item" onClick={onLogout}><I name="out" /> Logout</div>
+          </div>
+        </aside>
+        <div>
+          <div className="topbar">
+            <div className="search">
+              <I name="search" size={16} />
+              <input placeholder="Search activities, users, messages…" value={query} onChange={(e)=>setQuery(e.target.value)} />
+            </div>
+            <div className="user-chip">
+              <div className="avatar">{initials}</div>
+              <div>
+                <div className="user-name">{user.name}</div>
+                <div className="user-role">{user.role}</div>
+              </div>
+            </div>
+          </div>
+          <main className="main">{React.cloneElement(children, { searchQuery: query })}</main>
+        </div>
+      </div>
+    );
+  }
+
+  function Dashboard({ user, nav }) {
+    const [data, setData] = useState({ users:[], activities:[], assignments:[], messages:[], announcements:[] });
+    const [loading, setLoading] = useState(true);
+    useEffect(() => { (async () => {
+      const [users,activities,assignments,messages,announcements] = await Promise.all([
+        DB.listUsers(), DB.listActivities(), DB.listAssignments(), DB.listMessages(), DB.listAnnouncements(),
+      ]);
+      setData({ users, activities, assignments, messages, announcements });
+      setLoading(false);
+    })(); }, []);
+    if (loading) return <div className="empty">Loading dashboard…</div>;
+
+    const myAssignments = data.assignments.filter((a) => {
+      if (user.role==='teacher') return a.assignedBy===user.id;
+      if (user.role==='child')   return a.assignedTo===user.id;
+      if (user.role==='parent')  return (user.children||[]).includes(a.assignedTo);
+      return true;
+    });
+    const completed = myAssignments.filter((a)=>a.status==='completed').length;
+    const pending = myAssignments.filter((a)=>a.status!=='completed').length;
+    const myMessages = data.messages.filter((m)=>m.from===user.id || m.to===user.id);
+
+    const stats = (() => {
+      if (user.role==='admin') return [
+        { label:'Total users', value:data.users.length, delta:'+2 this week' },
+        { label:'Activities', value:data.activities.length, delta:'+1 this week' },
+        { label:'Active assignments', value:data.assignments.filter((a)=>a.status!=='completed').length },
+        { label:'Announcements', value:data.announcements.length },
+      ];
+      if (user.role==='teacher') return [
+        { label:'My learners', value:new Set(myAssignments.map((a)=>a.assignedTo)).size },
+        { label:'Activities created', value:data.activities.filter((a)=>a.createdBy===user.id).length },
+        { label:'Assignments', value:myAssignments.length },
+        { label:'Completed', value:completed, delta:`${pending} pending` },
+      ];
+      if (user.role==='parent') return [
+        { label:'My children', value:(user.children||[]).length },
+        { label:'Assignments', value:myAssignments.length },
+        { label:'Completed', value:completed },
+        { label:'Unread messages', value:myMessages.length },
+      ];
+      const me = data.users.find((u)=>u.id===user.id) || { points: 0 };
+      return [
+        { label:'Points earned', value:me.points||0, delta:'Keep going!' },
+        { label:'Activities done', value:completed },
+        { label:'In progress', value:myAssignments.filter((a)=>a.status==='in-progress').length },
+        { label:'Pending', value:myAssignments.filter((a)=>a.status==='pending').length },
+      ];
+    })();
+
+    return (
+      <>
+        <div className="page-header">
+          <div><h1>Hello, {user.name.split(' ')[0]} 👋</h1><p>Here's what's happening today.</p></div>
+          {user.role==='teacher' && <button className="btn-primary" onClick={()=>nav('/activities')}><I name="plus" size={14} /> New Activity</button>}
+        </div>
+        <div className="stat-grid">
+          {stats.map((s) => (
+            <div key={s.label} className="stat-card">
+              <div className="label">{s.label}</div>
+              <div className="value">{s.value}</div>
+              {s.delta && <div className="delta">{s.delta}</div>}
+            </div>
+          ))}
+        </div>
+        <div className="two-col">
+          <div className="card">
+            <h3>Recent assignments</h3>
+            {myAssignments.length===0 && <div className="empty">No assignments yet.</div>}
+            {myAssignments.slice(0,5).map((as) => {
+              const act = data.activities.find((a)=>a.id===as.activityId);
+              const learner = data.users.find((u)=>u.id===as.assignedTo);
+              return (
+                <div key={as.id} className="list-row">
+                  <div className="row-icon"><I name="book" /></div>
+                  <div className="row-main">
+                    <div className="row-title">{act?.title || '—'}</div>
+                    <div className="row-sub">Learner: {learner?.name || '—'} · Due {as.dueDate || 'flexible'}</div>
+                  </div>
+                  <span className={`badge ${as.status==='completed'?'green':as.status==='in-progress'?'amber':'blue'}`}>{as.status}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="card">
+            <h3>Latest announcements</h3>
+            {data.announcements.slice(0,3).map((a) => (
+              <div key={a.id} className="list-row">
+                <div className="row-icon"><I name="bell" /></div>
+                <div className="row-main">
+                  <div className="row-title">{a.title}</div>
+                  <div className="row-sub">{a.body.slice(0,60)}…</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  function Activities({ user, searchQuery }) {
+    const toast = useToast();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    useEffect(() => { DB.listActivities().then((rows)=>{ setItems(rows); setLoading(false); }); }, []);
+    const canCreate = user.role==='teacher' || user.role==='admin';
+    const q = (searchQuery || filter).toLowerCase().trim();
+    const filtered = q ? items.filter((a)=>a.title.toLowerCase().includes(q)||a.category.toLowerCase().includes(q)||a.grade.toLowerCase().includes(q)) : items;
+    function handleCreated(a) { setItems((x)=>[...x,a]); toast(`Activity "${a.title}" added`,'success'); setShowModal(false); }
+    return (
+      <>
+        <div className="page-header">
+          <div><h1>Activities</h1><p>Browse and search the activity library.</p></div>
+          {canCreate && <button className="btn-primary" onClick={()=>setShowModal(true)}><I name="plus" size={14} /> New Activity</button>}
+        </div>
+        <div className="card" style={{marginBottom:16,padding:14}}>
+          <div style={{position:'relative'}}>
+            <input placeholder="Filter by title, category, or grade…" value={filter} onChange={(e)=>setFilter(e.target.value)}
+              style={{width:'100%',padding:'10px 14px 10px 38px',border:'1.5px solid var(--border)',borderRadius:8,fontSize:14}} />
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'var(--muted)'}}><I name="search" size={16} /></span>
+          </div>
+        </div>
+        <div className="card" style={{padding:0}}>
+          {loading && <div className="empty">Loading activities…</div>}
+          {!loading && filtered.length===0 && <div className="empty"><I name="book" size={36} /><div>No activities match your search.</div></div>}
+          {!loading && filtered.map((a) => (
+            <div key={a.id} className="list-row">
+              <div className="row-icon"><I name="book" /></div>
+              <div className="row-main">
+                <div className="row-title">{a.title}</div>
+                <div className="row-sub">{a.category} · Grade {a.grade} · {a.points} pts</div>
+              </div>
+              <span className="badge blue">{a.category}</span>
+            </div>
+          ))}
+        </div>
+        {showModal && <ActivityModal user={user} onClose={()=>setShowModal(false)} onCreated={handleCreated} />}
+      </>
+    );
+  }
+
+  function ActivityModal({ user, onClose, onCreated }) {
+    const [form, setForm] = useState({ title:'', category:'Social Skills', points:10, grade:'P3' });
+    const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+    const set = (k,v)=>setForm((f)=>({ ...f, [k]: v }));
+    async function submit(e) {
+      e.preventDefault(); setErr(''); setBusy(true);
+      try { const a = await DB.createActivity({ ...form, createdBy: user.id }); onCreated(a); }
+      catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+    }
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <form onSubmit={submit}>
+            <div className="modal-header"><h3>New Activity</h3><button type="button" className="btn-ghost" onClick={onClose}><I name="x" size={16} /></button></div>
+            <div className="modal-body">
+              {err && <div className="form-error">{err}</div>}
+              <div className="form-group"><label>Title</label><input value={form.title} onChange={(e)=>set('title',e.target.value)} placeholder="e.g. Picture matching" /></div>
+              <div className="form-group"><label>Category</label>
+                <select value={form.category} onChange={(e)=>set('category',e.target.value)}>
+                  <option>Social Skills</option><option>Cognitive</option><option>Language</option><option>Emotional</option><option>Math</option><option>Communication</option>
+                </select>
+              </div>
+              <div className="form-group"><label>Grade</label>
+                <select value={form.grade} onChange={(e)=>set('grade',e.target.value)}>
+                  <option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>P5</option><option>P6</option>
+                </select>
+              </div>
+              <div className="form-group"><label>Points</label><input type="number" min="1" max="100" value={form.points} onChange={(e)=>set('points',e.target.value)} /></div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={busy}>{busy?'Saving…':'Create activity'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  function Assignments({ user }) {
+    const toast = useToast();
+    const [state, setState] = useState({ assignments:[], activities:[], users:[], loading:true });
+    const [showModal, setShowModal] = useState(false);
+    async function refresh() {
+      const [assignments, activities, users] = await Promise.all([DB.listAssignments(), DB.listActivities(), DB.listUsers()]);
+      setState({ assignments, activities, users, loading:false });
+    }
+    useEffect(() => { refresh(); }, []);
+    const mine = state.assignments.filter((a) => {
+      if (user.role==='teacher') return a.assignedBy===user.id;
+      if (user.role==='child')   return a.assignedTo===user.id;
+      if (user.role==='parent')  return (user.children||[]).includes(a.assignedTo);
+      return true;
+    });
+    async function markComplete(id) {
+      try { await DB.completeAssignment(id); toast('Marked complete — points awarded.','success'); refresh(); }
+      catch (ex) { toast(ex.message,'error'); }
+    }
+    return (
+      <>
+        <div className="page-header">
+          <div>
+            <h1>{user.role==='child'?'My Progress':user.role==='parent'?'My Children':'Assignments'}</h1>
+            <p>{user.role==='teacher'?"Assignments you've issued to learners.":user.role==='child'?'Activities assigned to you. Mark them complete to earn points.':'Activities assigned to your children.'}</p>
+          </div>
+          {user.role==='teacher' && <button className="btn-primary" onClick={()=>setShowModal(true)}><I name="plus" size={14} /> New Assignment</button>}
+        </div>
+        <div className="card" style={{padding:0}}>
+          {state.loading && <div className="empty">Loading…</div>}
+          {!state.loading && mine.length===0 && <div className="empty"><I name="list" size={36} /><div>No assignments yet.</div></div>}
+          {!state.loading && mine.length>0 && (
+            <table className="tbl">
+              <thead><tr><th>Activity</th><th>{user.role==='child'?'Points':'Learner'}</th><th>Due</th><th>Status</th><th></th></tr></thead>
+              <tbody>
+                {mine.map((as) => {
+                  const act = state.activities.find((a)=>a.id===as.activityId);
+                  const learner = state.users.find((u)=>u.id===as.assignedTo);
+                  return (
+                    <tr key={as.id}>
+                      <td><b>{act?.title||'—'}</b><div style={{fontSize:12,color:'var(--muted)'}}>{act?.category}</div></td>
+                      <td>{user.role==='child'?`${act?.points||0} pts`:learner?.name||'—'}</td>
+                      <td>{as.dueDate||'—'}</td>
+                      <td><span className={`badge ${as.status==='completed'?'green':as.status==='in-progress'?'amber':'blue'}`}>{as.status}</span></td>
+                      <td style={{textAlign:'right'}}>{as.status!=='completed' && user.role==='child' && <button className="btn-sm" onClick={()=>markComplete(as.id)}>Mark complete</button>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+        {showModal && <AssignmentModal user={user} activities={state.activities} learners={state.users.filter((u)=>u.role==='child')}
+          onClose={()=>setShowModal(false)} onCreated={()=>{ toast('Assignment created.','success'); setShowModal(false); refresh(); }} />}
+      </>
+    );
+  }
+
+  function AssignmentModal({ user, activities, learners, onClose, onCreated }) {
+    const [form, setForm] = useState({ activityId: activities[0]?.id||'', assignedTo: learners[0]?.id||'', dueDate:'' });
+    const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+    const set = (k,v)=>setForm((f)=>({ ...f, [k]: v }));
+    async function submit(e) {
+      e.preventDefault(); setErr(''); setBusy(true);
+      try { const a = await DB.createAssignment({ ...form, assignedBy: user.id }); onCreated(a); }
+      catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+    }
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <form onSubmit={submit}>
+            <div className="modal-header"><h3>New Assignment</h3><button type="button" className="btn-ghost" onClick={onClose}><I name="x" size={16} /></button></div>
+            <div className="modal-body">
+              {err && <div className="form-error">{err}</div>}
+              <div className="form-group"><label>Activity</label>
+                <select value={form.activityId} onChange={(e)=>set('activityId',e.target.value)}>{activities.map((a)=><option key={a.id} value={a.id}>{a.title}</option>)}</select>
+              </div>
+              <div className="form-group"><label>Learner</label>
+                <select value={form.assignedTo} onChange={(e)=>set('assignedTo',e.target.value)}>{learners.map((l)=><option key={l.id} value={l.id}>{l.name} ({l.grade})</option>)}</select>
+              </div>
+              <div className="form-group"><label>Due date</label><input type="date" value={form.dueDate} onChange={(e)=>set('dueDate',e.target.value)} /></div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={busy}>{busy?'Saving…':'Create assignment'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  function Messages({ user }) {
+    const toast = useToast();
+    const [state, setState] = useState({ messages:[], users:[], loading:true });
+    const [activeId, setActiveId] = useState(null);
+    const [text, setText] = useState('');
+    async function refresh() { const [messages, users] = await Promise.all([DB.listMessages(), DB.listUsers()]); setState({ messages, users, loading:false }); }
+    useEffect(() => { refresh(); }, []);
+    const conversations = useMemo(() => {
+      const map = new Map();
+      state.messages.forEach((m) => {
+        if (m.from!==user.id && m.to!==user.id) return;
+        const other = m.from===user.id ? m.to : m.from;
+        const prev = map.get(other);
+        if (!prev || new Date(m.at) > new Date(prev.at)) map.set(other, m);
+      });
+      return Array.from(map.entries()).map(([other,last])=>({ otherId:other, user:state.users.find((u)=>u.id===other), last })).filter((c)=>c.user);
+    }, [state.messages, state.users, user.id]);
+    useEffect(() => { if (!activeId && conversations.length) setActiveId(conversations[0].otherId); }, [conversations, activeId]);
+    const thread = state.messages.filter((m)=>(m.from===user.id&&m.to===activeId)||(m.from===activeId&&m.to===user.id)).sort((a,b)=>new Date(a.at)-new Date(b.at));
+    const other = state.users.find((u)=>u.id===activeId);
+    async function send(e) {
+      e.preventDefault(); if (!text.trim() || !activeId) return;
+      try { await DB.sendMessage({ from:user.id, to:activeId, text }); setText(''); refresh(); }
+      catch (ex) { toast(ex.message,'error'); }
+    }
+    return (
+      <>
+        <div className="page-header"><h1>Messages</h1><p>Direct conversations with teachers and parents.</p></div>
+        {state.loading ? <div className="empty">Loading messages…</div> :
+         conversations.length===0 ? <div className="card empty"><I name="msg" size={36} /><div>No conversations yet.</div></div> :
+         <div className="msg-layout">
+           <div className="msg-list">{conversations.map((c)=>(
+             <div key={c.otherId} className={`msg-list-item ${c.otherId===activeId?'active':''}`} onClick={()=>setActiveId(c.otherId)}>
+               <div className="who">{c.user.name}</div><div className="preview">{c.last.text}</div>
+             </div>
+           ))}</div>
+           <div className="msg-thread">
+             <div className="msg-thread-header"><b>{other?.name||'Conversation'}</b><div style={{fontSize:12,color:'var(--muted)',textTransform:'capitalize'}}>{other?.role}</div></div>
+             <div className="msg-thread-body">{thread.map((m)=>(<div key={m.id} className={`msg-bubble ${m.from===user.id?'me':'them'}`}>{m.text}</div>))}</div>
+             <form className="msg-thread-input" onSubmit={send}>
+               <input placeholder="Type a message…" value={text} onChange={(e)=>setText(e.target.value)} />
+               <button type="submit" className="btn-primary"><I name="send" size={14} /> Send</button>
+             </form>
+           </div>
+         </div>
+        }
+      </>
+    );
+  }
+
+  function Announcements({ user }) {
+    const toast = useToast();
+    const [items, setItems] = useState([]); const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    async function refresh() { const r = await DB.listAnnouncements(); setItems(r); setLoading(false); }
+    useEffect(() => { refresh(); }, []);
+    const canPost = user.role==='admin' || user.role==='teacher';
+    return (
+      <>
+        <div className="page-header">
+          <div><h1>Announcements</h1><p>School-wide notices and updates.</p></div>
+          {canPost && <button className="btn-primary" onClick={()=>setShowModal(true)}><I name="plus" size={14} /> New Announcement</button>}
+        </div>
+        {loading && <div className="empty">Loading…</div>}
+        {!loading && items.length===0 && <div className="card empty"><I name="bell" size={36} /><div>No announcements yet.</div></div>}
+        {!loading && items.map((a) => (
+          <div key={a.id} className="card" style={{marginBottom:14}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+              <h3 style={{marginBottom:0}}>{a.title}</h3>
+              <span className="badge gray"><I name="cal" size={11} /> {a.date}</span>
+            </div>
+            <p style={{color:'var(--ink2)',fontSize:14,lineHeight:1.6}}>{a.body}</p>
+          </div>
+        ))}
+        {showModal && <AnnouncementModal user={user} onClose={()=>setShowModal(false)} onCreated={()=>{ toast('Announcement posted.','success'); setShowModal(false); refresh(); }} />}
+      </>
+    );
+  }
+
+  function AnnouncementModal({ user, onClose, onCreated }) {
+    const [form, setForm] = useState({ title:'', body:'' });
+    const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
+    const set = (k,v)=>setForm((f)=>({ ...f, [k]: v }));
+    async function submit(e) {
+      e.preventDefault(); setErr(''); setBusy(true);
+      try { await DB.createAnnouncement({ ...form, authorId: user.id }); onCreated(); }
+      catch (ex) { setErr(ex.message); } finally { setBusy(false); }
+    }
+    return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e)=>e.stopPropagation()}>
+          <form onSubmit={submit}>
+            <div className="modal-header"><h3>New Announcement</h3><button type="button" className="btn-ghost" onClick={onClose}><I name="x" size={16} /></button></div>
+            <div className="modal-body">
+              {err && <div className="form-error">{err}</div>}
+              <div className="form-group"><label>Title</label><input value={form.title} onChange={(e)=>set('title',e.target.value)} placeholder="Workshop, reminder, etc." /></div>
+              <div className="form-group"><label>Message</label><textarea rows="4" value={form.body} onChange={(e)=>set('body',e.target.value)} placeholder="Write the announcement…" /></div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={busy}>{busy?'Posting…':'Post announcement'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  function Users({ user, searchQuery }) {
+    const toast = useToast();
+    const [items, setItems] = useState([]); const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('all');
+    async function refresh() { const r = await DB.listUsers(); setItems(r); setLoading(false); }
+    useEffect(() => { refresh(); }, []);
+    const q = (searchQuery||'').toLowerCase().trim();
+    const filtered = items.filter((u)=>filter==='all'||u.role===filter).filter((u)=>!q||u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q));
+    async function remove(id) {
+      if (id===user.id) { toast("You can't delete your own account.",'error'); return; }
+      if (!window.confirm('Delete this user?')) return;
+      await DB.deleteUser(id); toast('User deleted.','success'); refresh();
+    }
+    return (
+      <>
+        <div className="page-header">
+          <div><h1>Users</h1><p>Manage teachers, parents and children.</p></div>
+          <select className="btn-secondary" value={filter} onChange={(e)=>setFilter(e.target.value)}>
+            <option value="all">All roles</option><option value="teacher">Teachers</option><option value="parent">Parents</option><option value="child">Children</option><option value="admin">Admins</option>
+          </select>
+        </div>
+        <div className="card" style={{padding:0}}>
+          {loading && <div className="empty">Loading…</div>}
+          {!loading && filtered.length===0 && <div className="empty">No users match.</div>}
+          {!loading && filtered.length>0 && (
+            <table className="tbl">
+              <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Details</th><th></th></tr></thead>
+              <tbody>
+                {filtered.map((u) => (
+                  <tr key={u.id}>
+                    <td><b>{u.name}</b></td>
+                    <td>{u.email}</td>
+                    <td><span className="badge blue">{u.role}</span></td>
+                    <td style={{fontSize:13,color:'var(--muted)'}}>
+                      {u.role==='child' && `Grade ${u.grade||'—'} · ${u.points||0} pts`}
+                      {u.role==='teacher' && `Teaches: ${(u.grades||[]).join(', ')||'—'}`}
+                      {u.role==='parent' && `${(u.children||[]).length} children linked`}
+                      {u.role==='admin' && 'System administrator'}
+                    </td>
+                    <td style={{textAlign:'right'}}><button className="btn-danger" onClick={()=>remove(u.id)}>Delete</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  function Profile({ user, onLogout }) {
+    const initials = user.name.split(/\s+/).map((p)=>p[0]).slice(0,2).join('').toUpperCase();
+    return (
+      <>
+        <div className="page-header"><div><h1>Profile</h1><p>Your account details.</p></div></div>
+        <div className="card" style={{maxWidth:560}}>
+          <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:20}}>
+            <div style={{width:64,height:64,borderRadius:'50%',background:'var(--indigo)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:700}}>{initials}</div>
+            <div>
+              <div style={{fontSize:18,fontWeight:700}}>{user.name}</div>
+              <div style={{color:'var(--muted)',fontSize:14}}>{user.email}</div>
+              <span className="badge blue" style={{marginTop:4}}>{user.role}</span>
+            </div>
+          </div>
+          <div className="form-group"><label>User ID</label><input value={user.id} readOnly /></div>
+          {user.role==='child' && <div className="form-group"><label>Grade</label><input value={user.grade||'—'} readOnly /></div>}
+          {user.role==='child' && <div className="form-group"><label>Points</label><input value={user.points||0} readOnly /></div>}
+          {user.role==='teacher' && <div className="form-group"><label>Grades taught</label><input value={(user.grades||[]).join(', ')||'—'} readOnly /></div>}
+          <button className="btn-danger" onClick={onLogout}><I name="out" size={14} /> Sign out</button>
+        </div>
+      </>
+    );
+  }
+
+  function App() {
+    const [route, nav] = useHashRoute();
+    const [user, setUser] = useState(() => DB.currentUser());
+    const isPublic = route==='/' || route==='/login' || route==='/register';
+    useEffect(() => {
+      if (!user && !isPublic) nav('/login');
+      if (user && (route==='/login'||route==='/register'||route==='/')) nav('/dashboard');
+    }, [user, route, isPublic, nav]);
+    async function handleLogout() { await DB.logout(); setUser(null); nav('/'); }
+    if (!user) {
+      if (route==='/login')    return <Login    nav={nav} onAuth={setUser} />;
+      if (route==='/register') return <Register nav={nav} onAuth={setUser} />;
+      return <Landing nav={nav} />;
+    }
+    let screen;
+    switch (route) {
+      case '/dashboard':     screen = <Dashboard user={user} nav={nav} />; break;
+      case '/activities':    screen = <Activities user={user} />; break;
+      case '/assignments':   screen = <Assignments user={user} />; break;
+      case '/messages':      screen = <Messages user={user} />; break;
+      case '/announcements': screen = <Announcements user={user} />; break;
+      case '/users':         screen = (user.role==='admin' ? <Users user={user} /> : <Dashboard user={user} nav={nav} />); break;
+      case '/profile':       screen = <Profile user={user} onLogout={handleLogout} />; break;
+      default:               screen = <Dashboard user={user} nav={nav} />;
+    }
+    return <Shell user={user} route={route} nav={nav} onLogout={handleLogout}>{screen}</Shell>;
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<ToastProvider><App /></ToastProvider>);
+  </script>
+</body>
+</html>
